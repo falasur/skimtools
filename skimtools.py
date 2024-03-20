@@ -8,6 +8,17 @@ import yaml
 import re
 from pandas import DataFrame
 
+PATH_TO_METRICS = 'C:\\Users\\rfakhrutdinov\\__metrics__.xlsx'
+
+#Returns list of allowed metrics
+def get_metrics(path=PATH_TO_METRICS):
+    return pd.read_excel(path).NAME.to_list()
+
+# Returns metric values that are not included in the allowed metrics
+def get_invalid_metrics(data: pd.DataFrame, metrics: iter, column='Метрика*'):
+    m = data[column]
+    return m[~m.isin(metrics)].unique()
+
 COLUMNS = ['ID', 'Наименование*', 'Родительский раздел/Путь*', 'Описание*', 'Тип*',
        'Дата ввода в действие',
        'Формула расчёта (если гбт расчётная и формула распространяется на все БТ)',
@@ -37,29 +48,52 @@ COLUMNS = ['ID', 'Наименование*', 'Родительский разд
        'Указать справочник var/h-code или иное и указать код*', 'ID единый',
        'Комментарий.1', 'Принадлежность к виду отчетности']
 
-COLUMN_MAPPER = {
-    'ПОКАЗАТЕЛЬ 1 УРОВНЯ': 'Наименование*',
-    'PLACE': 'Родительский раздел/Путь*',
-    'ЕД. ИЗМЕРЕНИЯ': 'Единица измерения*',
-    'ТИП ОТЧЕТНОГО ПЕРИОДА': 'Дискретность*',
-    'ВЕРСИЯ ДАННЫХ': 'Метрика*',
-    'VAL_TYPE': 'Тип данных*',
-    'ТИП ЗНАЧЕНИЯ': 'Тип значения*',
-    'НОРМАТИВНЫЙ ДОКУМЕНТ': 'Ссылка на регламентирующий документ в Репозитории',
-    'НОРМАТИВНЫЙ ДОКУМЕНТ': 'Номер и дата регламентирующего документа*',
-    'РЕГЛАМЕНТ ФОРМИРОВАНИЯ ПОКАЗАТЕЛЕЙ': 'Алгоритм расчёта*',
-    'АЛГОРИТМ РАСЧЕТА': 'Формула расчёта*',
-    'ОТВ. \nПОДР.': 'Бизнес-владелец*',
-    'Ответственный заместитель генерального директора':'Руководство ОАО «РЖД»*',
-    'ФОРМА СТАТИСТИЧЕСКОЙ ОТЧЕТНОСТИ':'Индекс/код и наименование формы отчётности*',
-    'АЛГОРИТМ РАСЧЕТА':'Регламент формирования*',
-    'ИСТОЧНИК МАСТЕР-ДАННЫХ':'Система‚ источник учетной формы*',
-    'ИСТОЧНИК МАСТЕР-ДАННЫХ':'Система‚ источник формирования показателя*',
-    'ИСТОЧНИК МАСТЕР-ДАННЫХ':'Система‚ источник отчетной формы (публикация)*',
-    'ОРГСТРУКТУРА':'Справочник показателей (территориальный)*',
-    'СТРУКТУРА':'Справочник показателей (функциональный)*',
-    'VAR':'Указать справочник var/h-code или иное и указать код*'   
-}
+#COLUMN_MAPPER = {
+#    'ПОКАЗАТЕЛЬ 1 УРОВНЯ': 'Наименование*',
+#    'PLACE': 'Родительский раздел/Путь*',
+#    'ЕД. ИЗМЕРЕНИЯ': 'Единица измерения*',
+#    'ТИП ОТЧЕТНОГО ПЕРИОДА': 'Дискретность*',
+#    'ВЕРСИЯ ДАННЫХ': 'Метрика*',
+#   'VAL_TYPE': 'Тип данных*',
+#     'ТИП ЗНАЧЕНИЯ': 'Тип значения*',
+#     'НОРМАТИВНЫЙ ДОКУМЕНТ': 'Ссылка на регламентирующий документ в Репозитории',
+#     'НОРМАТИВНЫЙ ДОКУМЕНТ': 'Номер и дата регламентирующего документа*',
+#     'РЕГЛАМЕНТ ФОРМИРОВАНИЯ ПОКАЗАТЕЛЕЙ': 'Алгоритм расчёта*',
+#     'АЛГОРИТМ РАСЧЕТА': 'Формула расчёта*',
+#     'ОТВ. \nПОДР.': 'Бизнес-владелец*',
+#     'Ответственный заместитель генерального директора':'Руководство ОАО «РЖД»*',
+#     'ФОРМА СТАТИСТИЧЕСКОЙ ОТЧЕТНОСТИ':'Индекс/код и наименование формы отчётности*',
+#     'АЛГОРИТМ РАСЧЕТА':'Регламент формирования*',
+#     'ИСТОЧНИК МАСТЕР-ДАННЫХ':'Система‚ источник учетной формы*',
+#     'ИСТОЧНИК МАСТЕР-ДАННЫХ':'Система‚ источник формирования показателя*',
+#     'ИСТОЧНИК МАСТЕР-ДАННЫХ':'Система‚ источник отчетной формы (публикация)*',
+#     'ОРГСТРУКТУРА':'Справочник показателей (территориальный)*',
+#     'СТРУКТУРА':'Справочник показателей (функциональный)*',
+#     'VAR':'Указать справочник var/h-code или иное и указать код*'   
+# }
+
+COLUMN_MAPPER = {'Наименование*': 'ПОКАЗАТЕЛЬ', 
+ 'Родительский раздел/Путь*': 'НАИМЕНОВАНИЕ ФОРМЫ', 
+ 'Единица измерения*': 'ЕД.ИЗМЕРЕНИЯ', 
+ 'Дискретность*': 'ТИП ОТЧЕТНОГО ПЕРИОДА', 
+ 'Метрика*': 'ВЕРСИЯ ДАННЫХ', 
+ 'Тип значения*': 'ТИП ЗНАЧЕНИЯ', 
+ 'Номер и дата регламентирующего документа*': 'НОРМАТИВНЫЙ ДОКУМЕНТ', 
+ 'Ссылка на регламентирующий документ в Репозитории': 'НОРМАТИВНЫЙ ДОКУМЕНТ',
+ 'Формула расчёта*': 'ИСТОЧНИК МАСТЕР-ДАННЫХ',
+ 'Алгоритм расчёта*': 'КОММЕНТАРИИ', 
+ 'Система‚ источник отчетной формы (публикация)*': 'ИСТОЧНИК МАСТЕР-ДАННЫХ', 
+ 'Бизнес-владелец*': 'ФИЛИАЛ', 
+ 'Руководство ОАО «РЖД»*': 'ОТВЕТСТВЕННЫЙ НАЧАЛЬНИК ФИЛИАЛА', 
+ 'Индекс/код и наименование формы отчётности*': 'ФОРМА СТАТИСТИЧЕСКОЙ ОТЧЕТНОСТИ', 
+ '№Таблицы‚ №строки‚№ графы в форме*': 'ФОРМА СТАТИСТИЧЕСКОЙ ОТЧЕТНОСТИ',
+ 'Регламент формирования*': 'РЕГЛАМЕНТ ФОРМИРОВАНИЯ ПОКАЗАТЕЛЕЙ',
+ 'Система‚ источник учетной формы*': 'ИСТОЧНИК МАСТЕР-ДАННЫХ',
+ 'Система‚ источник формирования показателя*': 'ИСТОЧНИК МАСТЕР-ДАННЫХ',
+ 'Система‚ источник отчетной формы (публикация)*':'ИСТОЧНИК МАСТЕР-ДАННЫХ',
+ 'Справочник показателей (территориальный)*': 'ОРГСТРУКТУРА', 
+ 'Справочник показателей (функциональный)*': 'СТРУКТУРА'}
+
 
 #### General ####
 
@@ -67,6 +101,12 @@ COLUMN_MAPPER = {
 # Testing that module is imported
 def test_import():
     print("Module sucessfully imported")
+
+def define_type(x):
+    if re.search('((Д|д)оля|отклонение)', x):
+        return 'расчетный'
+    return 'первичный'
+
 
 
 #### Data models opening and usage ####
@@ -134,6 +174,10 @@ def doublecheck(function):
             raise KeyboardInterrupt
     return wrapper
 
+# hash column name for writing yaml file
+def hash_name(x):
+    return re.sub(r'\W+', '', column)
+
 
 # Запись файлов с параметрами
 @doublecheck
@@ -163,6 +207,50 @@ def mapper(datamodel, column_name, plausible_mapper):
 def correct_column(df, column, na_filler, mapper):
     return df[column].fillna(na_filler).replace(mapper)
 
+# Write a set of values for given columns
+# If you update yaml (there is an earlier version of mapping), then 
+# you should leave the update_true as true. 
+def write_sets(data: pd.DataFrame, 
+               columns: iter, 
+               update_mode=True) -> None:
+    '''Write a set of values for given columns
+
+    If you update yaml (there is an earlier version of mapping), then 
+    you should leave the update_true as true.  
+    '''
+    for column in columns:
+        if update_mode:
+            existing_yaml = read_yaml(hash_name(column) + '.yaml')
+        else:
+            existing_yaml = {}
+        new_flag = '_________________________________________###NEW!!!###'
+        values={**{i:i + new_flag for i in get_set_attribute(data, column)}, 
+                **existing_yaml} 
+        write_yaml(hash_name(column) + '.yaml', values)
+
+# After you manually correct written yamls with mappings, you should map columns. 
+def correct_columns(data: pd.DataFrame, columns: list) -> None:
+    for column in columns:
+        filename = hash_name(column) + '.yaml'
+        mapper = read_yaml(filename)
+        print(f'fixing column {column}')
+        data[column] = correct_column(data, 
+                                    column=column, 
+                                    na_filler='', 
+                                    mapper=mapper)
+        
+def extract_dt(x: str) -> str:
+    if 'ожидаемый' in x:
+        return 'ожидаемый'
+    elif 'утвержденный' in x:
+        return 'утвержденный'
+    elif 'оперативный' in x:
+        return 'оперативный'
+    elif 'статистический' in x:
+        return 'статистический'    
+    elif 'расследованный' in x:
+        return 'расследованный'
+    return 'Не задан'
 
 # Analyzing VAR postfixes in accordance with business logic
 def fixing_deviations_based_on_var(data, var_column, metrics_column):
@@ -237,6 +325,13 @@ def compare_name(iterable, val, function):
     for i in iterable:
         if function(i) == val:
             return i
+
+# Adding header for importer
+def add_header(data):
+    header = pd.DataFrame(columns=data.columns)
+    for column in header.columns:
+        header[column] = pd.Series(['Пустая строка для импортера']*5)
+    return pd.concat([header, data])
         
 
 
@@ -303,6 +398,6 @@ class DataModel(DataFrame):
 '''
 
 # Актуально для СКИМ Н - поправить типы значений, записанные в формате "Итог, нарастающий итог по месяцам/суткам/неделям с начала месяца"
-    def fix_val_type(self, 
-                     valtype_column='Тип значения*'):
-        return fix_agg_result(split_rows_by_comma(self, 'Тип значения*'), 'Тип значения*')
+#    def fix_val_type(self, 
+#                     valtype_column='Тип значения*'):
+#        return fix_agg_result(split_rows_by_comma(self, 'Тип значения*'), 'Тип значения*')
