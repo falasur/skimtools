@@ -216,7 +216,7 @@ def write_sets(data: pd.DataFrame,
     '''Write a set of values for given columns
 
     If you update yaml (there is an earlier version of mapping), then 
-    you should leave the update_true as true.  
+    you should leave the update_mode as true.  
     '''
     for column in columns:
         if update_mode:
@@ -349,10 +349,11 @@ class DataModel(DataFrame):
 # Дописать - чтобы шапка для импортера из верхних пяти строк была одинаковая
 
 # Поправить Тип на расчетный
-    def fix_type(self, type_col = 'Тип*'):
-        return self.replace(
-            to_replace={type_col: ''}, 
-            value='расчетный')
+#     def fix_type(self, type_col = 'Тип*'):
+#         return self.replace(
+#             to_replace={type_col: ''}, 
+#             value='расчетный')
+# НЕправильно, надо ставить тип в расчкте из метрик
     
 # Поправить некорректные символы в справочниках
     def filter_functional_and_territorial_dicts(self, 
@@ -378,24 +379,24 @@ class DataModel(DataFrame):
             print(column)
             write_yaml(filename, column_dictionary)
 
-'''    def map_columns(self, mapper_folder):
-        for file in os.listdir('./skim_N_sets/'):
-           path = './skim_N_sets/' + file
-           print(path)
-           mapper = read_yaml(path)
-        which_column = file[:-5]
-    column_name = compare_name(target_dm.columns, 
-                               which_column, 
-                               lambda x: re.sub(r'\W+', '', x))
+    # def map_columns(self, mapper_folder):
+    #     for file in os.listdir('./skim_N_sets/'):
+    #        path = './skim_N_sets/' + file
+    #        print(path)
+    #        mapper = read_yaml(path)
+    #     which_column = file[:-5]
+    # column_name = compare_name(target_dm.columns, 
+    #                            which_column, 
+    #                            lambda x: re.sub(r'\W+', '', x))
     
-    new_column = correct_column(target_dm, 
-                                column=column_name, 
-                                na_filler='', 
-                                mapper=mapper)
-    new_column_name = column_name
+    # new_column = correct_column(target_dm, 
+    #                             column=column_name, 
+    #                             na_filler='', 
+    #                             mapper=mapper)
+    # new_column_name = column_name
     
-    target_dm[new_column_name] = new_column
-'''
+    # target_dm[new_column_name] = new_column
+
 
 # Актуально для СКИМ Н - поправить типы значений, записанные в формате "Итог, нарастающий итог по месяцам/суткам/неделям с начала месяца"
 #    def fix_val_type(self, 
